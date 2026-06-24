@@ -11,12 +11,16 @@
       background: #0a0a0a;
       color: #ffffff;
       font-family: 'Arial Black', 'Arial Bold', Arial, sans-serif;
+    }
+
+    /* ── Number section ── */
+    .hero {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      overflow: hidden;
+      min-height: 100vh;
+      padding: 40px 20px 20px;
       user-select: none;
     }
 
@@ -34,7 +38,7 @@
       font-weight: 900;
       line-height: 1;
       color: #ffffff;
-      transition: transform 0.15s ease, opacity 0.15s ease;
+      transition: transform 0.15s ease;
     }
 
     .number.bump {
@@ -42,24 +46,169 @@
       color: #4af;
     }
 
+    .disclaimer {
+      margin-top: 24px;
+      font-size: clamp(0.75rem, 2vw, 1rem);
+      color: #e74c3c;
+      font-family: Arial, sans-serif;
+      font-weight: 400;
+      text-align: center;
+      max-width: 560px;
+      line-height: 1.5;
+    }
+
     .dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
       background: #2a2;
-      margin-top: 2em;
+      margin-top: 20px;
       transition: background 0.3s;
     }
 
-    .dot.offline {
-      background: #a22;
+    .dot.offline { background: #a22; }
+
+    /* ── FAQ section ── */
+    .faq-section {
+      background: #111;
+      border-top: 1px solid #222;
+      padding: 48px 24px 64px;
+      font-family: Arial, sans-serif;
     }
+
+    .faq-section h2 {
+      text-align: center;
+      font-size: 1.1rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #666;
+      margin-bottom: 32px;
+    }
+
+    .faq-list {
+      max-width: 680px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .faq-item {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .faq-question {
+      width: 100%;
+      background: none;
+      border: none;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      font-size: 1rem;
+      font-weight: bold;
+      text-align: left;
+      padding: 18px 20px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .faq-question:hover { background: #222; }
+
+    .faq-chevron {
+      color: #555;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+
+    .faq-answer {
+      display: none;
+      padding: 0 20px 18px;
+      color: #aaa;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .faq-item.open .faq-answer { display: block; }
   </style>
 </head>
 <body>
-  <div class="label">Now Serving</div>
-  <div class="number" id="num">—</div>
-  <div class="dot" id="dot"></div>
+
+  <!-- Number display -->
+  <div class="hero">
+    <div class="label">Now Serving</div>
+    <div class="number" id="num">—</div>
+    <div class="disclaimer">
+      If your number is not reached by 10pm, the number will no longer be valid.
+      Please visit us tomorrow for a new number.
+    </div>
+    <div class="dot" id="dot"></div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-section">
+    <h2>Frequently Asked Questions</h2>
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          My number passed, what should I do?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          If your number passed, visit us and speak with an associate. Please be aware, if your number was called more than 5 minutes ago, you will need to line up again.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          How early should I be around the shop?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          Please make sure you are near the store when your number is within 10 of the number being called. Please be aware, if your number was called more than 5 minutes ago, you will need to line up again.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          My number hasn't been called yet and I am unable to wait any longer. What do I do?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          This virtual queue is meant to act exactly like a physical line. If you are unable to wait any longer, you will have to get a new ticket at another time.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          What is the store phone number?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          Our store number is: +1 (808) 744-3880.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          What are your store hours?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          Our official store hours are 10am–10pm. Our team will open earlier if possible, up to 9am.
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <script>
     const numEl = document.getElementById('num');
@@ -73,22 +222,18 @@
 
     function connect() {
       const es = new EventSource('/events');
-
-      es.onopen = () => {
-        dotEl.classList.remove('offline');
-      };
-
-      es.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-        setNumber(data.number);
-      };
-
+      es.onopen = () => dotEl.classList.remove('offline');
+      es.onmessage = (e) => setNumber(JSON.parse(e.data).number);
       es.onerror = () => {
         dotEl.classList.add('offline');
         es.close();
-        // Reconnect after 3 seconds
         setTimeout(connect, 3000);
       };
+    }
+
+    function toggle(btn) {
+      const item = btn.closest('.faq-item');
+      item.classList.toggle('open');
     }
 
     connect();

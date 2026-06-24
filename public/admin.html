@@ -11,11 +11,14 @@
       background: #f4f4f4;
       font-family: Arial, sans-serif;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       min-height: 100vh;
+      padding: 40px 20px;
+      gap: 24px;
     }
 
+    /* ── Admin card ── */
     .card {
       background: #fff;
       border-radius: 16px;
@@ -24,6 +27,7 @@
       width: 100%;
       max-width: 380px;
       text-align: center;
+      flex-shrink: 0;
     }
 
     h1 {
@@ -34,7 +38,7 @@
       text-transform: uppercase;
     }
 
-    /* --- Login form --- */
+    /* ── Login form ── */
     #login-form input {
       width: 100%;
       padding: 14px;
@@ -48,9 +52,7 @@
       transition: border-color 0.2s;
     }
 
-    #login-form input:focus {
-      border-color: #4a90e2;
-    }
+    #login-form input:focus { border-color: #4a90e2; }
 
     .btn-primary {
       width: 100%;
@@ -74,7 +76,7 @@
       min-height: 1.2em;
     }
 
-    /* --- Admin controls --- */
+    /* ── Controls ── */
     #controls { display: none; }
 
     .current-number {
@@ -105,21 +107,13 @@
       border: none;
       border-radius: 16px;
       cursor: pointer;
-      transition: transform 0.1s, opacity 0.2s;
+      transition: transform 0.1s;
       line-height: 1;
     }
 
     .btn-action:active { transform: scale(0.92); }
-
-    .btn-dec {
-      background: #e74c3c;
-      color: #fff;
-    }
-
-    .btn-inc {
-      background: #27ae60;
-      color: #fff;
-    }
+    .btn-dec { background: #e74c3c; color: #fff; }
+    .btn-inc { background: #27ae60; color: #fff; }
 
     .set-row {
       display: flex;
@@ -187,20 +181,59 @@
       cursor: pointer;
       text-decoration: underline;
     }
+
+    /* ── History panel ── */
+    #history-panel {
+      display: none;
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      width: 200px;
+      flex-shrink: 0;
+    }
+
+    #history-panel h2 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #999;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    #history-list {
+      list-style: none;
+      max-height: calc(100vh - 160px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    #history-list li {
+      font-size: 0.9rem;
+      color: #444;
+      font-family: monospace;
+      padding: 5px 8px;
+      background: #f7f7f7;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Admin card -->
   <div class="card">
     <h1>Queue Admin</h1>
 
-    <!-- Login -->
     <div id="login-form">
       <input type="password" id="password-input" placeholder="Enter password" autocomplete="current-password">
       <button class="btn-primary" onclick="login()">Unlock</button>
       <div class="error" id="login-error"></div>
     </div>
 
-    <!-- Controls (shown after login) -->
     <div id="controls">
       <div style="color:#888; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.1em;">Now Serving</div>
       <div class="current-number" id="current-num">—</div>
@@ -221,19 +254,27 @@
     </div>
   </div>
 
+  <!-- History panel -->
+  <div id="history-panel">
+    <h2>Change History</h2>
+    <ul id="history-list"></ul>
+  </div>
+
   <script>
     let storedPassword = '';
     let currentNum = 1;
+    const history = [];
 
     const passwordInput = document.getElementById('password-input');
-    const loginError = document.getElementById('login-error');
-    const controlsEl = document.getElementById('controls');
-    const loginForm = document.getElementById('login-form');
-    const currentNumEl = document.getElementById('current-num');
-    const statusEl = document.getElementById('status');
-    const setInput = document.getElementById('set-input');
+    const loginError    = document.getElementById('login-error');
+    const controlsEl   = document.getElementById('controls');
+    const loginForm     = document.getElementById('login-form');
+    const currentNumEl  = document.getElementById('current-num');
+    const statusEl      = document.getElementById('status');
+    const setInput      = document.getElementById('set-input');
+    const historyPanel  = document.getElementById('history-panel');
+    const historyList   = document.getElementById('history-list');
 
-    // Allow Enter key to submit login
     passwordInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') login();
     });
@@ -241,7 +282,6 @@
     async function login() {
       const pw = passwordInput.value.trim();
       if (!pw) return;
-
       loginError.textContent = '';
       try {
         const res = await fetch('/api/auth', {
@@ -249,12 +289,12 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password: pw }),
         });
-
         if (res.ok) {
           storedPassword = pw;
           passwordInput.value = '';
           loginForm.style.display = 'none';
           controlsEl.style.display = 'block';
+          historyPanel.style.display = 'block';
           await loadCurrent();
         } else {
           loginError.textContent = 'Incorrect password.';
@@ -268,13 +308,32 @@
       try {
         const res = await fetch('/api/queue');
         const data = await res.json();
-        setDisplay(data.number);
+        currentNum = data.number;
+        currentNumEl.textContent = data.number;
       } catch {
         statusEl.textContent = 'Could not load current number.';
       }
     }
 
+    function nowHST() {
+      return new Date().toLocaleTimeString('en-US', {
+        timeZone: 'Pacific/Honolulu',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }).toLowerCase().replace(' ', '');
+    }
+
+    function addHistory(from, to) {
+      history.unshift(`${from}→${to} ${nowHST()}`);
+      if (history.length > 100) history.pop();
+      historyList.innerHTML = history
+        .map(h => `<li>${h}</li>`)
+        .join('');
+    }
+
     function setDisplay(n) {
+      if (currentNum !== n) addHistory(currentNum, n);
       currentNum = n;
       currentNumEl.textContent = n;
       currentNumEl.classList.add('bump');
@@ -286,18 +345,12 @@
       try {
         const body = { action, password: storedPassword };
         if (action === 'set') body.value = value;
-
         const res = await fetch('/api/queue', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         });
-
-        if (res.status === 401) {
-          logout();
-          return;
-        }
-
+        if (res.status === 401) { logout(); return; }
         const data = await res.json();
         if (data.error) {
           statusEl.textContent = data.error;
@@ -309,7 +362,6 @@
       }
     }
 
-    // Only allow digits in the set input
     setInput.addEventListener('input', () => {
       setInput.value = setInput.value.replace(/\D/g, '');
     });
@@ -329,14 +381,13 @@
     }
 
     function resetPrompt() {
-      if (confirm('Reset queue number to 1?')) {
-        update('set', 1);
-      }
+      if (confirm('Reset queue number to 1?')) update('set', 1);
     }
 
     function logout() {
       storedPassword = '';
       controlsEl.style.display = 'none';
+      historyPanel.style.display = 'none';
       loginForm.style.display = 'block';
       passwordInput.focus();
     }
