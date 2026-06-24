@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Queue Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #f4f4f4;
+      font-family: Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.3rem;
+      color: #333;
+      margin-bottom: 28px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* --- Login form --- */
+    #login-form input {
+      width: 100%;
+      padding: 14px;
+      font-size: 1rem;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      outline: none;
+      text-align: center;
+      letter-spacing: 0.1em;
+      margin-bottom: 14px;
+      transition: border-color 0.2s;
+    }
+
+    #login-form input:focus {
+      border-color: #4a90e2;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: bold;
+      background: #333;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover { background: #111; }
+
+    .error {
+      color: #c0392b;
+      font-size: 0.9rem;
+      margin-top: 10px;
+      min-height: 1.2em;
+    }
+
+    /* --- Admin controls --- */
+    #controls { display: none; }
+
+    .current-number {
+      font-size: 6rem;
+      font-weight: 900;
+      color: #222;
+      line-height: 1;
+      margin: 10px 0 24px;
+      transition: transform 0.15s ease;
+    }
+
+    .current-number.bump {
+      transform: scale(1.1);
+      color: #4a90e2;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .btn-action {
+      width: 90px;
+      height: 90px;
+      font-size: 3rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+      line-height: 1;
+    }
+
+    .btn-action:active { transform: scale(0.92); }
+
+    .btn-dec {
+      background: #e74c3c;
+      color: #fff;
+    }
+
+    .btn-inc {
+      background: #27ae60;
+      color: #fff;
+    }
+
+    .set-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .set-row input {
+      flex: 1;
+      padding: 12px;
+      font-size: 1.1rem;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      outline: none;
+      text-align: center;
+      font-weight: bold;
+      transition: border-color 0.2s;
+    }
+
+    .set-row input:focus { border-color: #4a90e2; }
+
+    .set-row button {
+      padding: 12px 18px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      background: #4a90e2;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .set-row button:hover { background: #357abd; }
+
+    .btn-reset {
+      margin-top: 12px;
+      width: 100%;
+      padding: 12px;
+      font-size: 0.9rem;
+      background: #eee;
+      color: #555;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-reset:hover { background: #ddd; }
+
+    .status {
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: #888;
+      min-height: 1.2em;
+    }
+
+    .btn-logout {
+      margin-top: 20px;
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Queue Admin</h1>
+
+    <!-- Login -->
+    <div id="login-form">
+      <input type="password" id="password-input" placeholder="Enter password" autocomplete="current-password">
+      <button class="btn-primary" onclick="login()">Unlock</button>
+      <div class="error" id="login-error"></div>
+    </div>
+
+    <!-- Controls (shown after login) -->
+    <div id="controls">
+      <div style="color:#888; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.1em;">Now Serving</div>
+      <div class="current-number" id="current-num">—</div>
+
+      <div class="btn-row">
+        <button class="btn-action btn-dec" onclick="update('decrement')">−</button>
+        <button class="btn-action btn-inc" onclick="update('increment')">+</button>
+      </div>
+
+      <div class="set-row">
+        <input type="text" inputmode="numeric" id="set-input" placeholder="Set to…" maxlength="6">
+        <button onclick="submitSet()">Set</button>
+      </div>
+
+      <button class="btn-reset" onclick="resetPrompt()">Reset to 1</button>
+      <div class="status" id="status"></div>
+      <button class="btn-logout" onclick="logout()">Lock / Log out</button>
+    </div>
+  </div>
+
+  <script>
+    let storedPassword = '';
+    let currentNum = 1;
+
+    const passwordInput = document.getElementById('password-input');
+    const loginError = document.getElementById('login-error');
+    const controlsEl = document.getElementById('controls');
+    const loginForm = document.getElementById('login-form');
+    const currentNumEl = document.getElementById('current-num');
+    const statusEl = document.getElementById('status');
+    const setInput = document.getElementById('set-input');
+
+    // Allow Enter key to submit login
+    passwordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') login();
+    });
+
+    async function login() {
+      const pw = passwordInput.value.trim();
+      if (!pw) return;
+
+      loginError.textContent = '';
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pw }),
+        });
+
+        if (res.ok) {
+          storedPassword = pw;
+          passwordInput.value = '';
+          loginForm.style.display = 'none';
+          controlsEl.style.display = 'block';
+          await loadCurrent();
+        } else {
+          loginError.textContent = 'Incorrect password.';
+        }
+      } catch {
+        loginError.textContent = 'Could not connect to server.';
+      }
+    }
+
+    async function loadCurrent() {
+      try {
+        const res = await fetch('/api/queue');
+        const data = await res.json();
+        setDisplay(data.number);
+      } catch {
+        statusEl.textContent = 'Could not load current number.';
+      }
+    }
+
+    function setDisplay(n) {
+      currentNum = n;
+      currentNumEl.textContent = n;
+      currentNumEl.classList.add('bump');
+      setTimeout(() => currentNumEl.classList.remove('bump'), 200);
+    }
+
+    async function update(action, value) {
+      statusEl.textContent = '';
+      try {
+        const body = { action, password: storedPassword };
+        if (action === 'set') body.value = value;
+
+        const res = await fetch('/api/queue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        if (res.status === 401) {
+          logout();
+          return;
+        }
+
+        const data = await res.json();
+        if (data.error) {
+          statusEl.textContent = data.error;
+        } else {
+          setDisplay(data.number);
+        }
+      } catch {
+        statusEl.textContent = 'Error — check connection.';
+      }
+    }
+
+    // Only allow digits in the set input
+    setInput.addEventListener('input', () => {
+      setInput.value = setInput.value.replace(/\D/g, '');
+    });
+
+    setInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitSet();
+    });
+
+    function submitSet() {
+      const val = parseInt(setInput.value, 10);
+      if (isNaN(val) || setInput.value.trim() === '') {
+        statusEl.textContent = 'Please enter a number.';
+        return;
+      }
+      setInput.value = '';
+      update('set', val);
+    }
+
+    function resetPrompt() {
+      if (confirm('Reset queue number to 1?')) {
+        update('set', 1);
+      }
+    }
+
+    function logout() {
+      storedPassword = '';
+      controlsEl.style.display = 'none';
+      loginForm.style.display = 'block';
+      passwordInput.focus();
+    }
+  </script>
+</body>
+</html>

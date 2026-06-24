@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Now Serving</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0a;
+      color: #ffffff;
+      font-family: 'Arial Black', 'Arial Bold', Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .label {
+      font-size: clamp(1.2rem, 4vw, 2.5rem);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #888;
+      font-weight: 400;
+      margin-bottom: 0.2em;
+    }
+
+    .number {
+      font-size: clamp(8rem, 40vw, 32rem);
+      font-weight: 900;
+      line-height: 1;
+      color: #ffffff;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .number.bump {
+      transform: scale(1.06);
+      color: #4af;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #2a2;
+      margin-top: 2em;
+      transition: background 0.3s;
+    }
+
+    .dot.offline {
+      background: #a22;
+    }
+  </style>
+</head>
+<body>
+  <div class="label">Now Serving</div>
+  <div class="number" id="num">—</div>
+  <div class="dot" id="dot"></div>
+
+  <script>
+    const numEl = document.getElementById('num');
+    const dotEl = document.getElementById('dot');
+
+    function setNumber(n) {
+      numEl.textContent = n;
+      numEl.classList.add('bump');
+      setTimeout(() => numEl.classList.remove('bump'), 200);
+    }
+
+    function connect() {
+      const es = new EventSource('/events');
+
+      es.onopen = () => {
+        dotEl.classList.remove('offline');
+      };
+
+      es.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        setNumber(data.number);
+      };
+
+      es.onerror = () => {
+        dotEl.classList.add('offline');
+        es.close();
+        // Reconnect after 3 seconds
+        setTimeout(connect, 3000);
+      };
+    }
+
+    connect();
+  </script>
+</body>
+</html>
