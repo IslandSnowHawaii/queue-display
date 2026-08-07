@@ -5,7 +5,6 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme';
-const RESET_TOKEN    = process.env.RESET_TOKEN || '';
 
 // Trust Railway's proxy so req.ip is the real client IP
 app.set('trust proxy', 1);
@@ -188,17 +187,6 @@ app.post('/api/closed', checkLockout, (req, res) => {
   res.json({ closed: queueClosed });
 });
 
-// Reset lockout — visit /api/unlock?token=YOUR_RESET_TOKEN in a browser
-app.get('/api/unlock', (req, res) => {
-  if (!RESET_TOKEN || req.query.token !== RESET_TOKEN) {
-    return res.status(401).send('Invalid or missing token.');
-  }
-  const count = loginAttempts.size;
-  loginAttempts.clear();
-  console.log(`Lockouts cleared via reset token (${count} IP(s) cleared)`);
-  res.send(`Done — all lockouts cleared (${count} IP(s) unlocked).`);
-});
-
 // SSE: real-time updates for display page
 app.get('/events', (req, res) => {
   res.set({
@@ -222,7 +210,4 @@ app.listen(PORT, () => {
   console.log(`Queue server running at http://localhost:${PORT}`);
   console.log(`Admin page: http://localhost:${PORT}/admin.html`);
   console.log(`Admin password: ${ADMIN_PASSWORD}`);
-  if (RESET_TOKEN) {
-    console.log(`Unlock URL: http://localhost:${PORT}/api/unlock?token=${RESET_TOKEN}`);
-  }
 });
