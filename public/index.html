@@ -508,6 +508,7 @@
     const dotEl        = document.getElementById('dot');
     const historyEl    = document.getElementById('history-list');
     const closedScreen = document.getElementById('closed-screen');
+    const faqBtn       = document.querySelector('.faq-btn');
 
     const MAX_HISTORY = 28;
     let localHistory = []; // { number, timestamp }
@@ -530,7 +531,9 @@
     }
 
     function applyState(data) {
-      closedScreen.classList.toggle('visible', Boolean(data.closed));
+      const closed = Boolean(data.closed);
+      closedScreen.classList.toggle('visible', closed);
+      faqBtn.style.display = closed ? 'none' : '';
       numEl.textContent = data.number;
       numEl.classList.add('bump');
       setTimeout(() => numEl.classList.remove('bump'), 200);
