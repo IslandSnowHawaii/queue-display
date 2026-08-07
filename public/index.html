@@ -13,6 +13,8 @@
       font-family: 'Arial Black', 'Arial Bold', Arial, sans-serif;
     }
 
+    html { scroll-behavior: smooth; }
+
     /* ── FAQ button (top-right corner) ── */
     .faq-btn {
       position: fixed;
@@ -24,10 +26,10 @@
       font-family: Arial, sans-serif;
       font-size: 0.85rem;
       font-weight: bold;
-      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.15);
+      cursor: pointer;
       padding: 8px 16px;
       border-radius: 20px;
-      border: 1px solid rgba(255,255,255,0.15);
       transition: background 0.2s, color 0.2s;
       letter-spacing: 0.05em;
     }
@@ -249,7 +251,7 @@
 </head>
 <body>
 
-  <a class="faq-btn" href="#faq">FAQs ↓</a>
+  <button class="faq-btn" onclick="document.getElementById('faq').scrollIntoView({behavior:'smooth'})">FAQs ↓</button>
 
   <!-- Hero -->
   <div class="hero">
@@ -264,7 +266,7 @@
     </div>
 
     <div class="history-panel">
-      <h2>Recent</h2>
+      <h2>Queue History</h2>
       <ul class="history-list" id="history-list"></ul>
     </div>
   </div>
@@ -291,6 +293,36 @@
         </button>
         <div class="faq-answer">
           Please make sure you are near the store when your number is within 10 of the number being called. Please be aware, if your number was called more than 5 minutes ago, you will need to line up again.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          Does my ticket guarantee my entry into the shop?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          No, your ticket symbolizes your place in line. We will serve as many patrons as possible until 10pm, but we may not be able to serve all interested parties. If your number is not called by 10pm, the number will no longer be valid.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          If I arrived later than 5 minutes after my number was called, does my ticket roll over to the next day?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          No, if you are more than 5 minutes past the time that we call your number, you will need to pick a new number.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          If my number was not called by 10pm, will my number roll over to the next day?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          No, all numbers are only valid for the day they are received.
         </div>
       </div>
 
@@ -332,7 +364,6 @@
     const dotEl      = document.getElementById('dot');
     const historyEl  = document.getElementById('history-list');
 
-    const ONE_HOUR = 60 * 60 * 1000;
     let localHistory = []; // { number, timestamp }
 
     function toHST(ts) {
@@ -344,15 +375,16 @@
       }).toLowerCase().replace(' ', '');
     }
 
+    const MAX_HISTORY = 28;
+
     function renderHistory() {
-      const cutoff = Date.now() - ONE_HOUR;
-      const recent = localHistory.filter(e => e.timestamp >= cutoff);
-      if (recent.length === 0) {
+      if (localHistory.length === 0) {
         historyEl.innerHTML = '';
         return;
       }
-      // Newest first
-      historyEl.innerHTML = [...recent].reverse().map(e =>
+      // Show last 28, newest first
+      const recent = localHistory.slice(-MAX_HISTORY).reverse();
+      historyEl.innerHTML = recent.map(e =>
         `<li><span class="h-num">${e.number}</span><span class="h-time">${toHST(e.timestamp)}</span></li>`
       ).join('');
     }
@@ -403,13 +435,6 @@
     function toggle(btn) {
       btn.closest('.faq-item').classList.toggle('open');
     }
-
-    // Prune history older than 1 hour every minute
-    setInterval(() => {
-      const cutoff = Date.now() - ONE_HOUR;
-      localHistory = localHistory.filter(e => e.timestamp >= cutoff);
-      renderHistory();
-    }, 60000);
 
     loadHistory();
     connect();
