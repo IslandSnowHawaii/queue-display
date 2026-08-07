@@ -76,6 +76,40 @@
       min-height: 1.2em;
     }
 
+    .lockout-box {
+      display: none;
+      margin-top: 16px;
+      background: #fff5f5;
+      border: 1px solid #f5c6cb;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .lockout-box.visible { display: block; }
+
+    .lockout-title {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #c0392b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .lockout-countdown {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #c0392b;
+      font-family: monospace;
+    }
+
+    .lockout-sub {
+      font-size: 0.75rem;
+      color: #888;
+      margin-top: 4px;
+    }
+
     /* ── Controls ── */
     #controls { display: none; }
 
@@ -252,8 +286,13 @@
 
     <div id="login-form">
       <input type="password" id="password-input" placeholder="Enter password" autocomplete="current-password">
-      <button class="btn-primary" onclick="login()">Unlock</button>
+      <button class="btn-primary" id="login-btn" onclick="login()">Unlock</button>
       <div class="error" id="login-error"></div>
+      <div class="lockout-box" id="lockout-box">
+        <div class="lockout-title" id="lockout-title">Too many attempts</div>
+        <div class="lockout-countdown" id="lockout-countdown">--:--</div>
+        <div class="lockout-sub" id="lockout-sub"></div>
+      </div>
     </div>
 
     <div id="controls">
@@ -287,23 +326,70 @@
     let storedPassword = '';
     let currentNum = 1;
     const history = [];
+    let countdownInterval = null;
 
-    const passwordInput = document.getElementById('password-input');
-    const loginError    = document.getElementById('login-error');
-    const controlsEl   = document.getElementById('controls');
-    const loginForm     = document.getElementById('login-form');
-    const currentNumEl  = document.getElementById('current-num');
-    const statusEl      = document.getElementById('status');
-    const setInput      = document.getElementById('set-input');
-    const historyPanel  = document.getElementById('history-panel');
-    const historyList   = document.getElementById('history-list');
-    const btnClosed     = document.getElementById('btn-closed');
+    const passwordInput   = document.getElementById('password-input');
+    const loginBtn        = document.getElementById('login-btn');
+    const loginError      = document.getElementById('login-error');
+    const controlsEl      = document.getElementById('controls');
+    const loginForm       = document.getElementById('login-form');
+    const currentNumEl    = document.getElementById('current-num');
+    const statusEl        = document.getElementById('status');
+    const setInput        = document.getElementById('set-input');
+    const historyPanel    = document.getElementById('history-panel');
+    const historyList     = document.getElementById('history-list');
+    const btnClosed       = document.getElementById('btn-closed');
+    const lockoutBox      = document.getElementById('lockout-box');
+    const lockoutTitle    = document.getElementById('lockout-title');
+    const lockoutCountdown = document.getElementById('lockout-countdown');
+    const lockoutSub      = document.getElementById('lockout-sub');
 
     let isClosed = false;
 
     passwordInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') login();
     });
+
+    function formatCountdown(ms) {
+      if (ms <= 0) return '0:00';
+      const totalSec = Math.ceil(ms / 1000);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      return `${m}:${String(s).padStart(2,'0')}`;
+    }
+
+    function startCountdown(until, attempts) {
+      clearInterval(countdownInterval);
+
+      const is12hr = attempts >= 20;
+      lockoutTitle.textContent = is12hr ? '12-hour lockout' : '15-minute lockout';
+      lockoutSub.textContent = `${attempts} failed attempt${attempts !== 1 ? 's' : ''}`;
+      lockoutBox.classList.add('visible');
+      loginError.textContent = '';
+      passwordInput.disabled = true;
+      loginBtn.disabled = true;
+      loginBtn.style.opacity = '0.4';
+
+      function tick() {
+        const remaining = until - Date.now();
+        if (remaining <= 0) {
+          clearInterval(countdownInterval);
+          lockoutBox.classList.remove('visible');
+          lockoutCountdown.textContent = '--:--';
+          passwordInput.disabled = false;
+          loginBtn.disabled = false;
+          loginBtn.style.opacity = '';
+          passwordInput.focus();
+          return;
+        }
+        lockoutCountdown.textContent = formatCountdown(remaining);
+      }
+
+      tick();
+      countdownInterval = setInterval(tick, 1000);
+    }
 
     async function login() {
       const pw = passwordInput.value.trim();
@@ -315,15 +401,23 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password: pw }),
         });
+        const data = await res.json();
+
         if (res.ok) {
+          clearInterval(countdownInterval);
           storedPassword = pw;
           passwordInput.value = '';
           loginForm.style.display = 'none';
           controlsEl.style.display = 'block';
           historyPanel.style.display = 'block';
           await loadCurrent();
+        } else if (res.status === 429 || data.locked) {
+          startCountdown(data.until, data.attempts);
         } else {
-          loginError.textContent = 'Incorrect password.';
+          const remaining = 10 - (data.attempts || 0);
+          loginError.textContent = remaining > 0
+            ? `Incorrect password. ${remaining} attempt${remaining !== 1 ? 's' : ''} before lockout.`
+            : 'Incorrect password.';
         }
       } catch {
         loginError.textContent = 'Could not connect to server.';
