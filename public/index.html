@@ -13,28 +13,59 @@
       font-family: 'Arial Black', 'Arial Bold', Arial, sans-serif;
     }
 
-    /* ── Number section ── */
+    /* ── FAQ button (top-right corner) ── */
+    .faq-btn {
+      position: fixed;
+      top: 18px;
+      right: 20px;
+      z-index: 100;
+      background: rgba(255,255,255,0.1);
+      color: #ccc;
+      font-family: Arial, sans-serif;
+      font-size: 0.85rem;
+      font-weight: bold;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.15);
+      transition: background 0.2s, color 0.2s;
+      letter-spacing: 0.05em;
+    }
+
+    .faq-btn:hover {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+
+    /* ── Hero: number + history side by side ── */
     .hero {
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      padding: 40px 20px 20px;
+      padding: 60px 32px 32px;
+      gap: 48px;
       user-select: none;
     }
 
+    /* Left: the number */
+    .hero-main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     .label {
-      font-size: clamp(1.2rem, 4vw, 2.5rem);
+      font-size: clamp(1rem, 3vw, 2rem);
       letter-spacing: 0.3em;
       text-transform: uppercase;
       color: #888;
       font-weight: 400;
-      margin-bottom: 0.2em;
+      margin-bottom: 0.1em;
     }
 
     .number {
-      font-size: clamp(8rem, 40vw, 32rem);
+      font-size: clamp(7rem, 30vw, 26rem);
       font-weight: 900;
       line-height: 1;
       color: #ffffff;
@@ -47,14 +78,14 @@
     }
 
     .disclaimer {
-      margin-top: 24px;
-      font-size: clamp(0.75rem, 2vw, 1rem);
+      margin-top: 20px;
+      font-size: clamp(0.7rem, 1.5vw, 0.95rem);
       color: #e74c3c;
       font-family: Arial, sans-serif;
       font-weight: 400;
       text-align: center;
-      max-width: 560px;
-      line-height: 1.5;
+      max-width: 480px;
+      line-height: 1.6;
     }
 
     .dot {
@@ -62,11 +93,88 @@
       height: 10px;
       border-radius: 50%;
       background: #2a2;
-      margin-top: 20px;
+      margin-top: 18px;
       transition: background 0.3s;
     }
 
     .dot.offline { background: #a22; }
+
+    /* Right: history panel */
+    .history-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 120px;
+    }
+
+    .history-panel h2 {
+      font-family: Arial, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 12px;
+      white-space: nowrap;
+    }
+
+    .history-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 60vh;
+      overflow-y: auto;
+      width: 100%;
+    }
+
+    .history-list li {
+      font-family: Arial, sans-serif;
+      font-size: 0.9rem;
+      color: #777;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .history-list li .h-num {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #ccc;
+      display: block;
+    }
+
+    .history-list li .h-time {
+      font-size: 0.7rem;
+      color: #555;
+    }
+
+    /* ── Mobile: stack history below ── */
+    @media (max-width: 600px) {
+      .hero {
+        flex-direction: column;
+        gap: 32px;
+        padding-top: 80px;
+      }
+
+      .history-panel {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        min-width: unset;
+        width: 100%;
+      }
+
+      .history-panel h2 { width: 100%; text-align: center; }
+
+      .history-list {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-height: none;
+        overflow: visible;
+      }
+    }
 
     /* ── FAQ section ── */
     .faq-section {
@@ -141,19 +249,28 @@
 </head>
 <body>
 
-  <!-- Number display -->
+  <a class="faq-btn" href="#faq">FAQs ↓</a>
+
+  <!-- Hero -->
   <div class="hero">
-    <div class="label">Now Serving</div>
-    <div class="number" id="num">—</div>
-    <div class="disclaimer">
-      If your number is not reached by 10pm, the number will no longer be valid.
-      Please visit us tomorrow for a new number.
+    <div class="hero-main">
+      <div class="label">Now Serving</div>
+      <div class="number" id="num">—</div>
+      <div class="disclaimer">
+        Please be aware, if your number was called more than 5 minutes ago, you will need to line up again.
+        If your number is not reached by 10pm, the number will no longer be valid. Please visit us tomorrow for a new number.
+      </div>
+      <div class="dot" id="dot"></div>
     </div>
-    <div class="dot" id="dot"></div>
+
+    <div class="history-panel">
+      <h2>Recent</h2>
+      <ul class="history-list" id="history-list"></ul>
+    </div>
   </div>
 
   <!-- FAQ -->
-  <div class="faq-section">
+  <div class="faq-section" id="faq">
     <h2>Frequently Asked Questions</h2>
     <div class="faq-list">
 
@@ -211,19 +328,71 @@
   </div>
 
   <script>
-    const numEl = document.getElementById('num');
-    const dotEl = document.getElementById('dot');
+    const numEl      = document.getElementById('num');
+    const dotEl      = document.getElementById('dot');
+    const historyEl  = document.getElementById('history-list');
 
-    function setNumber(n) {
+    const ONE_HOUR = 60 * 60 * 1000;
+    let localHistory = []; // { number, timestamp }
+
+    function toHST(ts) {
+      return new Date(ts).toLocaleTimeString('en-US', {
+        timeZone: 'Pacific/Honolulu',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }).toLowerCase().replace(' ', '');
+    }
+
+    function renderHistory() {
+      const cutoff = Date.now() - ONE_HOUR;
+      const recent = localHistory.filter(e => e.timestamp >= cutoff);
+      if (recent.length === 0) {
+        historyEl.innerHTML = '';
+        return;
+      }
+      // Newest first
+      historyEl.innerHTML = [...recent].reverse().map(e =>
+        `<li><span class="h-num">${e.number}</span><span class="h-time">${toHST(e.timestamp)}</span></li>`
+      ).join('');
+    }
+
+    function setNumber(n, ts) {
       numEl.textContent = n;
       numEl.classList.add('bump');
       setTimeout(() => numEl.classList.remove('bump'), 200);
     }
 
+    // Load history from server on page load
+    async function loadHistory() {
+      try {
+        const res = await fetch('/api/history');
+        localHistory = await res.json();
+        renderHistory();
+      } catch {}
+    }
+
     function connect() {
       const es = new EventSource('/events');
+
       es.onopen = () => dotEl.classList.remove('offline');
-      es.onmessage = (e) => setNumber(JSON.parse(e.data).number);
+
+      es.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        setNumber(data.number);
+        // Only add to history if it's a real change (not the initial connect message)
+        if (localHistory.length === 0 || localHistory[localHistory.length - 1].number !== data.number) {
+          // Don't double-add the initial number that was already loaded from /api/history
+          const alreadyPresent = localHistory.some(h =>
+            h.number === data.number && Date.now() - h.timestamp < 5000
+          );
+          if (!alreadyPresent) {
+            localHistory.push({ number: data.number, timestamp: Date.now() });
+          }
+        }
+        renderHistory();
+      };
+
       es.onerror = () => {
         dotEl.classList.add('offline');
         es.close();
@@ -232,10 +401,17 @@
     }
 
     function toggle(btn) {
-      const item = btn.closest('.faq-item');
-      item.classList.toggle('open');
+      btn.closest('.faq-item').classList.toggle('open');
     }
 
+    // Prune history older than 1 hour every minute
+    setInterval(() => {
+      const cutoff = Date.now() - ONE_HOUR;
+      localHistory = localHistory.filter(e => e.timestamp >= cutoff);
+      renderHistory();
+    }, 60000);
+
+    loadHistory();
     connect();
   </script>
 </body>

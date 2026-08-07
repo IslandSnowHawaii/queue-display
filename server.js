@@ -9,6 +9,8 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme';
 // --- State ---
 let queueNumber = 1;
 const clients = new Set(); // SSE clients
+const changeHistory = []; // { number, timestamp }
+const ONE_HOUR = 60 * 60 * 1000;
 
 // --- Middleware ---
 app.use(express.json());
@@ -47,8 +49,16 @@ app.post('/api/queue', (req, res) => {
     return res.status(400).json({ error: 'Invalid action' });
   }
 
+  changeHistory.push({ number: queueNumber, timestamp: Date.now() });
+
   broadcast({ number: queueNumber });
   res.json({ number: queueNumber });
+});
+
+// Public: get change history from the last hour
+app.get('/api/history', (req, res) => {
+  const cutoff = Date.now() - ONE_HOUR;
+  res.json(changeHistory.filter(e => e.timestamp >= cutoff));
 });
 
 // Admin: verify password (used by admin page on load)
