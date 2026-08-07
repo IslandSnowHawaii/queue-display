@@ -108,14 +108,20 @@
       inset: 0;
       background: #0a0a0a;
       z-index: 50;
+      overflow-y: auto;
+    }
+
+    .closed-screen.visible { display: block; }
+
+    .closed-hero {
+      display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      min-height: 100vh;
       text-align: center;
       padding: 40px;
     }
-
-    .closed-screen.visible { display: flex; }
 
     .closed-title {
       font-size: clamp(3rem, 10vw, 7rem);
@@ -124,24 +130,13 @@
       color: #ffffff;
     }
 
-    .closed-faq-btn {
+    .closed-scroll-hint {
       margin-top: 32px;
-      background: rgba(255,255,255,0.1);
-      color: #ccc;
+      font-size: 0.8rem;
+      color: #444;
       font-family: Arial, sans-serif;
-      font-size: 0.85rem;
-      font-weight: bold;
-      border: 1px solid rgba(255,255,255,0.15);
-      cursor: pointer;
-      padding: 8px 16px;
-      border-radius: 20px;
-      transition: background 0.2s, color 0.2s;
-      letter-spacing: 0.05em;
-    }
-
-    .closed-faq-btn:hover {
-      background: rgba(255,255,255,0.2);
-      color: #fff;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
     }
 
     .closed-message {
@@ -308,11 +303,98 @@
 
   <!-- Closed screen -->
   <div class="closed-screen" id="closed-screen">
-    <div class="closed-title">CLOSED</div>
-    <div class="closed-message">
-      Please visit us tomorrow for a new queue number.
+    <div class="closed-hero">
+      <div class="closed-title">CLOSED</div>
+      <div class="closed-message">Please visit us tomorrow for a new queue number.</div>
+      <div class="closed-scroll-hint">FAQs ↓</div>
     </div>
-    <button class="closed-faq-btn" onclick="closedFaq()">FAQs ↓</button>
+
+    <div class="faq-section">
+      <h2>Frequently Asked Questions</h2>
+      <div class="faq-list">
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggle(this)">
+            My queue number passed, what should I do?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            If your queue number passed, visit us and speak with an associate. Please be aware, if your queue number was called more than 5 minutes ago, you will need to line up again.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggle(this)">
+            How early should I be around the shop?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            Please make sure you are near the store when your queue number is within 10 of the queue number being called. Please be aware, if your queue number was called more than 5 minutes ago, you will need to line up again.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggle(this)">
+            Does my ticket guarantee my entry into the shop?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            No, your ticket symbolizes your place in line. We will serve as many patrons as possible until 10pm, but we may not be able to serve all interested parties. If your queue number is not called by 10pm, the queue number will no longer be valid.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggle(this)">
+            If I arrived later than 5 minutes after my queue number was called, does my ticket roll over to the next day?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            No, if you are more than 5 minutes past the time that we call your queue number, you will need to pick a new queue number.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggle(this)">
+            If my queue number was not called by 10pm, will my queue number roll over to the next day?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            No, all queue numbers are only valid for the day they are received.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggle(this)">
+            My queue number hasn't been called yet and I am unable to wait any longer. What do I do?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            This virtual queue is meant to act exactly like a physical line. If you are unable to wait any longer, you will have to get a new ticket at another time.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggle(this)">
+            What is the store phone number?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            Our store number is: +1 (808) 744-3880.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggle(this)">
+            What are your store hours?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            Our official store hours are 10am–10pm. Our team will open earlier if possible, up to 9am.
+          </div>
+        </div>
+
+      </div>
+    </div>
   </div>
 
   <!-- Hero -->
@@ -484,14 +566,6 @@
         es.close();
         setTimeout(connect, 3000);
       };
-    }
-
-    function closedFaq() {
-      // Temporarily hide overlay so the page underneath is scrollable, then scroll
-      closedScreen.style.display = 'none';
-      document.getElementById('faq').scrollIntoView({ behavior: 'smooth' });
-      // Bring overlay back after scroll completes so it's still there if they scroll up
-      setTimeout(() => { closedScreen.style.display = 'flex'; }, 1200);
     }
 
     function toggle(btn) {
