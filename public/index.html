@@ -117,21 +117,31 @@
 
     .closed-screen.visible { display: flex; }
 
-    .closed-label {
-      font-size: clamp(0.9rem, 2.5vw, 1.4rem);
-      letter-spacing: 0.4em;
-      text-transform: uppercase;
-      color: #555;
-      margin-bottom: 0.3em;
-      font-family: Arial, sans-serif;
-      font-weight: 400;
-    }
-
     .closed-title {
-      font-size: clamp(5rem, 22vw, 18rem);
+      font-size: clamp(3rem, 10vw, 7rem);
       font-weight: 900;
       line-height: 1;
-      color: #e74c3c;
+      color: #ffffff;
+    }
+
+    .closed-faq-btn {
+      margin-top: 32px;
+      background: rgba(255,255,255,0.1);
+      color: #ccc;
+      font-family: Arial, sans-serif;
+      font-size: 0.85rem;
+      font-weight: bold;
+      border: 1px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 20px;
+      transition: background 0.2s, color 0.2s;
+      letter-spacing: 0.05em;
+    }
+
+    .closed-faq-btn:hover {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
     }
 
     .closed-message {
@@ -298,13 +308,11 @@
 
   <!-- Closed screen -->
   <div class="closed-screen" id="closed-screen">
-    <div class="closed-label">Island Snow</div>
     <div class="closed-title">CLOSED</div>
     <div class="closed-message">
-      The queue is closed for today.<br>
-      Please visit us tomorrow for a new number.<br><br>
-      Store hours: 10am – 10pm
+      Please visit us tomorrow for a new queue number.
     </div>
+    <button class="closed-faq-btn" onclick="closedFaq()">FAQs ↓</button>
   </div>
 
   <!-- Hero -->
@@ -313,8 +321,8 @@
       <div class="label">Now Serving</div>
       <div class="number" id="num">—</div>
       <div class="disclaimer">
-        Please be aware, if your number was called more than 5 minutes ago, you will need to line up again.
-        If your number is not reached by 10pm, the number will no longer be valid. Please visit us tomorrow for a new number.
+        Please be aware, if your queue number was called more than 5 minutes ago, you will need to line up again.
+        If your queue number is not reached by 10pm, the queue number will no longer be valid. Please visit us tomorrow for a new queue number.
       </div>
       <div class="dot" id="dot"></div>
     </div>
@@ -332,11 +340,11 @@
 
       <div class="faq-item">
         <button class="faq-question" onclick="toggle(this)">
-          My number passed, what should I do?
+          My queue number passed, what should I do?
           <span class="faq-chevron">▼</span>
         </button>
         <div class="faq-answer">
-          If your number passed, visit us and speak with an associate. Please be aware, if your number was called more than 5 minutes ago, you will need to line up again.
+          If your queue number passed, visit us and speak with an associate. Please be aware, if your queue number was called more than 5 minutes ago, you will need to line up again.
         </div>
       </div>
 
@@ -346,7 +354,7 @@
           <span class="faq-chevron">▼</span>
         </button>
         <div class="faq-answer">
-          Please make sure you are near the store when your number is within 10 of the number being called. Please be aware, if your number was called more than 5 minutes ago, you will need to line up again.
+          Please make sure you are near the store when your queue number is within 10 of the queue number being called. Please be aware, if your queue number was called more than 5 minutes ago, you will need to line up again.
         </div>
       </div>
 
@@ -356,33 +364,33 @@
           <span class="faq-chevron">▼</span>
         </button>
         <div class="faq-answer">
-          No, your ticket symbolizes your place in line. We will serve as many patrons as possible until 10pm, but we may not be able to serve all interested parties. If your number is not called by 10pm, the number will no longer be valid.
+          No, your ticket symbolizes your place in line. We will serve as many patrons as possible until 10pm, but we may not be able to serve all interested parties. If your queue number is not called by 10pm, the queue number will no longer be valid.
         </div>
       </div>
 
       <div class="faq-item">
         <button class="faq-question" onclick="toggle(this)">
-          If I arrived later than 5 minutes after my number was called, does my ticket roll over to the next day?
+          If I arrived later than 5 minutes after my queue number was called, does my ticket roll over to the next day?
           <span class="faq-chevron">▼</span>
         </button>
         <div class="faq-answer">
-          No, if you are more than 5 minutes past the time that we call your number, you will need to pick a new number.
+          No, if you are more than 5 minutes past the time that we call your queue number, you will need to pick a new queue number.
         </div>
       </div>
 
       <div class="faq-item">
         <button class="faq-question" onclick="toggle(this)">
-          If my number was not called by 10pm, will my number roll over to the next day?
+          If my queue number was not called by 10pm, will my queue number roll over to the next day?
           <span class="faq-chevron">▼</span>
         </button>
         <div class="faq-answer">
-          No, all numbers are only valid for the day they are received.
+          No, all queue numbers are only valid for the day they are received.
         </div>
       </div>
 
       <div class="faq-item">
         <button class="faq-question" onclick="toggle(this)">
-          My number hasn't been called yet and I am unable to wait any longer. What do I do?
+          My queue number hasn't been called yet and I am unable to wait any longer. What do I do?
           <span class="faq-chevron">▼</span>
         </button>
         <div class="faq-answer">
@@ -476,6 +484,14 @@
         es.close();
         setTimeout(connect, 3000);
       };
+    }
+
+    function closedFaq() {
+      // Temporarily hide overlay so the page underneath is scrollable, then scroll
+      closedScreen.style.display = 'none';
+      document.getElementById('faq').scrollIntoView({ behavior: 'smooth' });
+      // Bring overlay back after scroll completes so it's still there if they scroll up
+      setTimeout(() => { closedScreen.style.display = 'flex'; }, 1200);
     }
 
     function toggle(btn) {
