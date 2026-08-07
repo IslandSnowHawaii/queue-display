@@ -101,6 +101,49 @@
 
     .dot.offline { background: #a22; }
 
+    /* ── Closed overlay ── */
+    .closed-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0a0a0a;
+      z-index: 50;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .closed-screen.visible { display: flex; }
+
+    .closed-label {
+      font-size: clamp(0.9rem, 2.5vw, 1.4rem);
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 0.3em;
+      font-family: Arial, sans-serif;
+      font-weight: 400;
+    }
+
+    .closed-title {
+      font-size: clamp(5rem, 22vw, 18rem);
+      font-weight: 900;
+      line-height: 1;
+      color: #e74c3c;
+    }
+
+    .closed-message {
+      margin-top: 24px;
+      font-size: clamp(0.85rem, 2vw, 1.2rem);
+      color: #555;
+      font-family: Arial, sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      max-width: 460px;
+    }
+
     /* Right: history panel */
     .history-panel {
       display: flex;
@@ -253,6 +296,17 @@
 
   <button class="faq-btn" onclick="document.getElementById('faq').scrollIntoView({behavior:'smooth'})">FAQs ↓</button>
 
+  <!-- Closed screen -->
+  <div class="closed-screen" id="closed-screen">
+    <div class="closed-label">Island Snow</div>
+    <div class="closed-title">CLOSED</div>
+    <div class="closed-message">
+      The queue is closed for today.<br>
+      Please visit us tomorrow for a new number.<br><br>
+      Store hours: 10am – 10pm
+    </div>
+  </div>
+
   <!-- Hero -->
   <div class="hero">
     <div class="hero-main">
@@ -360,10 +414,12 @@
   </div>
 
   <script>
-    const numEl      = document.getElementById('num');
-    const dotEl      = document.getElementById('dot');
-    const historyEl  = document.getElementById('history-list');
+    const numEl        = document.getElementById('num');
+    const dotEl        = document.getElementById('dot');
+    const historyEl    = document.getElementById('history-list');
+    const closedScreen = document.getElementById('closed-screen');
 
+    const MAX_HISTORY = 28;
     let localHistory = []; // { number, timestamp }
 
     function toHST(ts) {
@@ -375,27 +431,21 @@
       }).toLowerCase().replace(' ', '');
     }
 
-    const MAX_HISTORY = 28;
-
     function renderHistory() {
-      if (localHistory.length === 0) {
-        historyEl.innerHTML = '';
-        return;
-      }
-      // Show last 28, newest first
+      if (localHistory.length === 0) { historyEl.innerHTML = ''; return; }
       const recent = localHistory.slice(-MAX_HISTORY).reverse();
       historyEl.innerHTML = recent.map(e =>
         `<li><span class="h-num">${e.number}</span><span class="h-time">${toHST(e.timestamp)}</span></li>`
       ).join('');
     }
 
-    function setNumber(n, ts) {
-      numEl.textContent = n;
+    function applyState(data) {
+      closedScreen.classList.toggle('visible', Boolean(data.closed));
+      numEl.textContent = data.number;
       numEl.classList.add('bump');
       setTimeout(() => numEl.classList.remove('bump'), 200);
     }
 
-    // Load history from server on page load
     async function loadHistory() {
       try {
         const res = await fetch('/api/history');
@@ -411,16 +461,12 @@
 
       es.onmessage = (e) => {
         const data = JSON.parse(e.data);
-        setNumber(data.number);
-        // Only add to history if it's a real change (not the initial connect message)
-        if (localHistory.length === 0 || localHistory[localHistory.length - 1].number !== data.number) {
-          // Don't double-add the initial number that was already loaded from /api/history
-          const alreadyPresent = localHistory.some(h =>
-            h.number === data.number && Date.now() - h.timestamp < 5000
-          );
-          if (!alreadyPresent) {
-            localHistory.push({ number: data.number, timestamp: Date.now() });
-          }
+        applyState(data);
+
+        const last = localHistory[localHistory.length - 1];
+        const alreadyPresent = last && last.number === data.number && Date.now() - last.timestamp < 5000;
+        if (!alreadyPresent) {
+          localHistory.push({ number: data.number, timestamp: Date.now() });
         }
         renderHistory();
       };

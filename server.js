@@ -8,9 +8,9 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme';
 
 // --- State ---
 let queueNumber = 1;
+let queueClosed = false;
 const clients = new Set(); // SSE clients
 const changeHistory = []; // { number, timestamp }
-const ONE_HOUR = 60 * 60 * 1000;
 
 // --- Middleware ---
 app.use(express.json());
@@ -24,11 +24,38 @@ function broadcast(data) {
   }
 }
 
+// --- Midnight HST auto-reset ---
+// HST is always UTC-10 (no daylight saving)
+function scheduleMidnightReset() {
+  const now = Date.now();
+  const hstMs = now - (10 * 60 * 60 * 1000);          // current time in HST as ms
+  const msIntoDay = hstMs % (24 * 60 * 60 * 1000);    // how far into the HST day we are
+  const msUntilMidnight = (24 * 60 * 60 * 1000) - msIntoDay;
+
+  console.log(`Queue auto-reset scheduled in ${Math.round(msUntilMidnight / 60000)} minutes (midnight HST)`);
+
+  setTimeout(() => {
+    queueNumber = 1;
+    queueClosed = false;
+    changeHistory.length = 0;
+    broadcast({ number: queueNumber, closed: queueClosed });
+    console.log('Queue auto-reset to 1 at midnight HST');
+    scheduleMidnightReset(); // schedule the next night
+  }, msUntilMidnight);
+}
+
+scheduleMidnightReset();
+
 // --- Routes ---
 
-// Public: get current queue number
+// Public: get current queue state
 app.get('/api/queue', (req, res) => {
-  res.json({ number: queueNumber });
+  res.json({ number: queueNumber, closed: queueClosed });
+});
+
+// Public: get change history
+app.get('/api/history', (req, res) => {
+  res.json(changeHistory);
 });
 
 // Admin: update queue number (password-protected)
@@ -50,18 +77,24 @@ app.post('/api/queue', (req, res) => {
   }
 
   changeHistory.push({ number: queueNumber, timestamp: Date.now() });
-
-  broadcast({ number: queueNumber });
-  res.json({ number: queueNumber });
+  broadcast({ number: queueNumber, closed: queueClosed });
+  res.json({ number: queueNumber, closed: queueClosed });
 });
 
-// Public: get change history from the last hour
-app.get('/api/history', (req, res) => {
-  const cutoff = Date.now() - ONE_HOUR;
-  res.json(changeHistory.filter(e => e.timestamp >= cutoff));
+// Admin: toggle queue open/closed (password-protected)
+app.post('/api/closed', (req, res) => {
+  const { closed, password } = req.body;
+
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Incorrect password' });
+  }
+
+  queueClosed = Boolean(closed);
+  broadcast({ number: queueNumber, closed: queueClosed });
+  res.json({ closed: queueClosed });
 });
 
-// Admin: verify password (used by admin page on load)
+// Admin: verify password
 app.post('/api/auth', (req, res) => {
   const { password } = req.body;
   if (password === ADMIN_PASSWORD) {
@@ -80,8 +113,8 @@ app.get('/events', (req, res) => {
   });
   res.flushHeaders();
 
-  // Send current number immediately on connect
-  res.write(`data: ${JSON.stringify({ number: queueNumber })}\n\n`);
+  // Send current state immediately on connect
+  res.write(`data: ${JSON.stringify({ number: queueNumber, closed: queueClosed })}\n\n`);
 
   clients.add(res);
 
